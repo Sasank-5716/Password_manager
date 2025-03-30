@@ -82,6 +82,50 @@ class PasswordManager:
             return result[0]  # Return user_id
         return None
 
+
+    
+    def add_password(self, user_id, service, username, password):
+        encrypted_password = self.fernet.encrypt(password.encode()).decode()
+    
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+    
+        cursor.execute('''
+            INSERT INTO passwords (user_id, service, username, encrypted_password)
+            VALUES (?, ?, ?, ?)
+        ''', (user_id, service, username, encrypted_password))
+    
+        conn.commit()
+        conn.close()
+        print("Password saved successfully!")
+
+    def get_password(self, user_id, service):
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+    
+        cursor.execute('''
+            SELECT username, encrypted_password FROM passwords 
+            WHERE user_id = ? AND service = ?
+        ''', (user_id, service))
+        result = cursor.fetchone()
+        conn.close()
+    
+        if result:
+            username, encrypted_password = result
+            password = self.fernet.decrypt(encrypted_password.encode()).decode()
+            return username, password
+        return None, None
+
+    def list_services(self, user_id):
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+    
+        cursor.execute('''
+            SELECT service FROM passwords WHERE user_id = ?
+        ''', (user_id,))
+        services = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return services
     
     def __init__(self, db_file="passwords.db"):
         self.db_file = db_file
