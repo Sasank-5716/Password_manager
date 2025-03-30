@@ -139,8 +139,71 @@ class PasswordManager:
 
 def main():
     parser = argparse.ArgumentParser(description="Password Manager")
+    subparsers = parser.add_subparsers(dest="command", required=True)
     
-    pass
+    # Register command
+    register_parser = subparsers.add_parser("register", help="Register a new user")
+    register_parser.add_argument("username", help="Username for the new account")
+    
+    # Login command
+    login_parser = subparsers.add_parser("login", help="Login to your account")
+    login_parser.add_argument("username", help="Your username")
+    
+    # Add password command
+    add_parser = subparsers.add_parser("add", help="Add a new password")
+    add_parser.add_argument("service", help="Service name (e.g., 'google')")
+    add_parser.add_argument("--username", help="Username for the service")
+    add_parser.add_argument("--password", help="Password for the service (leave empty to generate)")
+    
+    # Get password command
+    get_parser = subparsers.add_parser("get", help="Get a stored password")
+    get_parser.add_argument("service", help="Service name")
+    
+    # List command
+    list_parser = subparsers.add_parser("list", help="List all stored services")
+    
+    args = parser.parse_args()
+    pm = PasswordManager()
+    
+    if args.command == "register":
+        password = getpass.getpass("Enter master password: ")
+        confirm = getpass.getpass("Confirm master password: ")
+        if password == confirm:
+            pm.register(args.username, password)
+        else:
+            print("Passwords don't match!")
+    
+    elif args.command == "login":
+        password = getpass.getpass("Enter master password: ")
+        user_id = pm.login(args.username, password)
+        if user_id:
+            print("Login successful!")
+            
+            if hasattr(args, 'service'):  # For add/get commands after login
+                if args.command == "add":
+                    service_username = args.username if args.username else input("Enter service username: ")
+                    service_password = args.password if args.password else pm.generate_password()
+                    print(f"Generated password: {service_password}")
+                    pm.add_password(user_id, args.service, service_username, service_password)
+                
+                elif args.command == "get":
+                    username, password = pm.get_password(user_id, args.service)
+                    if username and password:
+                        print(f"Username: {username}")
+                        print(f"Password: {password}")
+                    else:
+                        print("No password found for this service.")
+            
+            elif args.command == "list":
+                services = pm.list_services(user_id)
+                if services:
+                    print("Your saved services:")
+                    for service in services:
+                        print(f"- {service}")
+                else:
+                    print("No saved services found.")
+        else:
+            print("Invalid username or password!")
 
 if __name__ == "__main__":
     main()
