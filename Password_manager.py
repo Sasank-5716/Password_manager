@@ -20,6 +20,32 @@ class PasswordManager:
                 f.write(key)
     
         return Fernet(key)
+    
+    def _init_db(self):
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+    
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                master_password_hash TEXT NOT NULL
+            )
+        ''')
+    
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS passwords (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                service TEXT NOT NULL,
+                username TEXT,
+                encrypted_password TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        ''')
+    
+        conn.commit()
+        conn.close()
 
     def _hash_password(self, password):
         return hashlib.sha256(password.encode()).hexdigest()
@@ -29,7 +55,7 @@ class PasswordManager:
         self.db_file = db_file
         self.key_file = "secret.key"
         self.fernet = self._get_fernet()
-    
+        self._init_db()
     
 
 def main():
