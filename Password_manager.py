@@ -133,6 +133,9 @@ class PasswordManager:
         self.fernet = self._get_fernet()
         self._init_db()
     
+    def generate_password(self, length=16):
+        chars = string.ascii_letters + string.digits + string.punctuation
+        return ''.join(secrets.choice(chars) for _ in range(length))
 
 def main():
     parser = argparse.ArgumentParser(description="Password Manager")
