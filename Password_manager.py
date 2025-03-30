@@ -49,6 +49,38 @@ class PasswordManager:
 
     def _hash_password(self, password):
         return hashlib.sha256(password.encode()).hexdigest()
+    
+        
+    def register(self, username, master_password):
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+    
+        try:
+            password_hash = self._hash_password(master_password)
+            cursor.execute('''
+                INSERT INTO users (username, master_password_hash)
+                VALUES (?, ?)
+            ''', (username, password_hash))
+            conn.commit()
+            print("Registration successful!")
+        except sqlite3.IntegrityError:
+            print("Username already exists!")
+        finally:
+            conn.close()
+
+    def login(self, username, master_password):
+        conn = sqlite3.connect(self.db_file)
+        cursor = conn.cursor()
+    
+        cursor.execute('''
+            SELECT id, master_password_hash FROM users WHERE username = ?
+        ''', (username,))
+        result = cursor.fetchone()
+        conn.close()
+    
+        if result and result[1] == self._hash_password(master_password):
+            return result[0]  # Return user_id
+        return None
 
     
     def __init__(self, db_file="passwords.db"):
