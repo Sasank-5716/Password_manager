@@ -9,7 +9,10 @@ A command-line password manager that securely stores your passwords using encryp
 - 🔍 Easy password retrieval
 - 📝 Password history tracking
 
-- python password_manager.py [command] [arguments]
+
+_______________________________________________________________________________________
+
+python password_manager.py [command] [arguments]
 
 Commands:
   register <username>    Register a new user
