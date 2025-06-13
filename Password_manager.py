@@ -18,6 +18,8 @@ class PasswordManager:
             key = Fernet.generate_key()
             with open(self.key_file, "wb") as f:
                 f.write(key)
+        except IOError as e:  
+            raise RuntimeError(f"Key file error: {str(e)}") 
     
         return Fernet(key)
     
