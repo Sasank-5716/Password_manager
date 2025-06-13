@@ -181,7 +181,7 @@ def main():
         if user_id:
             print("Login successful!")
         
-            if hasattr(args, 'service'):  # For add/get commands after login
+            if hasattr(args, 'service'):  
                 if args.command == "add":
                     service_username = args.username if args.username else input("Enter service username: ")
                     service_password = args.password if args.password else pm.generate_password()
