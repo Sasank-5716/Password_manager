@@ -178,34 +178,42 @@ def main():
     elif args.command == "login":
         password = getpass.getpass("Enter master password: ")
         user_id = pm.login(args.username, password)
-        if user_id:
-            print("Login successful!")
+        print("Login successful!" if user_id else "Invalid credentials")
+        if user_id:  
+            service_user = args.username or input("Service username: ")  
+            service_pass = args.password or pm.generate_password()  
             
-            if hasattr(args, 'service'):  # For add/get commands after login
-                if args.command == "add":
-                    service_username = args.username if args.username else input("Enter service username: ")
-                    service_password = args.password if args.password else pm.generate_password()
-                    print(f"Generated password: {service_password}")
-                    pm.add_password(user_id, args.service, service_username, service_password)
-                
-                elif args.command == "get":
-                    username, password = pm.get_password(user_id, args.service)
-                    if username and password:
-                        print(f"Username: {username}")
-                        print(f"Password: {password}")
-                    else:
-                        print("No password found for this service.")
+            if not args.password:  
+                print(f"Generated password: {service_pass}") 
             
-            elif args.command == "list":
-                services = pm.list_services(user_id)
-                if services:
-                    print("Your saved services:")
-                    for service in services:
-                        print(f"- {service}")
-                else:
-                    print("No saved services found.")
+            pm.add_password(user_id, args.service, service_user, service_pass)  
         else:
-            print("Invalid username or password!")
+            print("Authentication failed")  
+    
+    elif args.command == "get":  
+        master_user = input("Master username: ") 
+        master_pass = getpass.getpass("Master password: ") 
+        user_id = pm.login(master_user, master_pass)  
+        
+        if user_id:  
+            username, password = pm.get_password(user_id, args.service)  
+            if username and password: 
+                print(f"Username: {username}\nPassword: {password}")  
+            else:
+                print("No entry found")  
+        else:
+            print("Authentication failed") 
+    
+    elif args.command == "list":  
+        master_user = input("Master username: ")  
+        master_pass = getpass.getpass("Master password: ")  
+        user_id = pm.login(master_user, master_pass)  
+        
+        if user_id:  
+            services = pm.list_services(user_id)  
+            print("\n".join(services) if services else "No services stored")  
+        else:
+            print("Authentication failed") 
 
 if __name__ == "__main__":
     main()
